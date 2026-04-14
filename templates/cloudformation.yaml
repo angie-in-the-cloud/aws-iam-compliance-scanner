@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  aws-iam-compliance-snapshot
+  Deploys a scheduled Lambda function that scans IAM password policy,
+  MFA enforcement, and root account activity. Outputs JSON and CSV
+  compliance evidence to S3. Mapped to NIST 800-53, SOC 2, and ISO 27001.
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Name of the S3 bucket to store compliance reports (must be globally unique)
+    Default: iam-compliance-snapshot-reports
+
+  ScheduleExpression:
+    Type: String
+    Description: How often to run the snapshot (cron or rate expression)
+    Default: rate(7 days)
+
+Resources:
+
+  # -------------------------------------------------------
+  # S3 Bucket — stores JSON and CSV compliance reports
+  # -------------------------------------------------------
+  ComplianceReportsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldReports
+            Status: Enabled
+            ExpirationInDays: 365
+
+  # -------------------------------------------------------
+  # IAM Role — least privilege for Lambda execution
+  # -------------------------------------------------------
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: iam-compliance-snapshot-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: IamComplianceSnapshotPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # CloudWatch Logs — Lambda execution logging
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+              # IAM — read-only access for scanners
+              - Effect: Allow
+                Action:
+                  - iam:GetAccountPasswordPolicy
+                  - iam:ListUsers
+                  - iam:GetLoginProfile
+                  - iam:ListMFADevices
+                Resource: "*"
+
+              # CloudTrail — lookup root events
+              - Effect: Allow
+                Action:
+                  - cloudtrail:LookupEvents
+                Resource: "*"
+
+              # S3 — write compliance reports
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub arn:aws:s3:::${S3BucketName}/reports/*
+
+  # -------------------------------------------------------
+  # Lambda Function — runs the compliance snapshot
+  # -------------------------------------------------------
+  ComplianceSnapshotFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: iam-compliance-snapshot
+      Description: Scans IAM controls and writes compliance evidence to S3
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 120
+      MemorySize: 256
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref S3BucketName
+      Code:
+        ZipFile: |
+          # Placeholder — deploy actual code using the deployment steps in the README
+          def handler(event, context):
+              return {"statusCode": 200, "message": "Deploy the full source code from /src"}
+
+  # -------------------------------------------------------
+  # EventBridge Rule — triggers Lambda on a schedule
+  # -------------------------------------------------------
+  SnapshotScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: iam-compliance-snapshot-schedule
+      Description: Triggers the IAM compliance snapshot on a recurring schedule
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        - Id: ComplianceSnapshotTarget
+          Arn: !GetAtt ComplianceSnapshotFunction.Arn
+
+  # Allow EventBridge to invoke the Lambda
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ComplianceSnapshotFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SnapshotScheduleRule.Arn
+
+Outputs:
+  S3BucketName:
+    Description: S3 bucket where compliance reports are stored
+    Value: !Ref ComplianceReportsBucket
+
+  LambdaFunctionName:
+    Description: Name of the compliance snapshot Lambda function
+    Value: !Ref ComplianceSnapshotFunction
+
+  LambdaFunctionArn:
+    Description: ARN of the compliance snapshot Lambda function
+    Value: !GetAtt ComplianceSnapshotFunction.Arn
+
+  ScheduleExpression:
+    Description: How often the snapshot runs
+    Value: !Ref ScheduleExpression
