@@ -19,28 +19,6 @@ Parameters:
 Resources:
 
   # -------------------------------------------------------
-  # S3 Bucket — stores JSON and CSV compliance reports
-  # -------------------------------------------------------
-  ComplianceReportsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref S3BucketName
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      LifecycleConfiguration:
-        Rules:
-          - Id: ExpireOldReports
-            Status: Enabled
-            ExpirationInDays: 365
-
-  # -------------------------------------------------------
   # IAM Role — least privilege for Lambda execution
   # -------------------------------------------------------
   LambdaExecutionRole:
@@ -134,10 +112,6 @@ Resources:
       SourceArn: !GetAtt SnapshotScheduleRule.Arn
 
 Outputs:
-  S3BucketName:
-    Description: S3 bucket where compliance reports are stored
-    Value: !Ref ComplianceReportsBucket
-
   LambdaFunctionName:
     Description: Name of the compliance snapshot Lambda function
     Value: !Ref ComplianceSnapshotFunction

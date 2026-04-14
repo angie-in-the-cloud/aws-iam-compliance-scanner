@@ -8,11 +8,12 @@ SOC 2 CC6.2, and ISO 27001 A.9.2.3.
 
 import boto3
 import logging
+import time
 from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger()
 
-LOOKBACK_DAYS = 90
+LOOKBACK_DAYS = 30
 
 FRAMEWORK_MAPPING = {
     "nist": "AC-2(5)",
@@ -45,10 +46,12 @@ def scan_root_activity(region: str) -> list:
             ],
             StartTime=start_time,
             EndTime=end_time,
+            PaginationConfig={"MaxItems": 50, "PageSize": 50}
         )
 
         for page in pages:
             root_events.extend(page.get("Events", []))
+            time.sleep(1)  # Throttle to avoid API limits
 
     except Exception as e:
         logger.error(f"CloudTrail lookup failed: {e}")
