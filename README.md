@@ -28,16 +28,24 @@ Every finding is mapped to the relevant control in each framework.
 
 | Control Area | NIST 800-53 | SOC 2 | ISO 27001 |
 |---|---|---|---|
-| Password complexity & rotation | IA-5(1) | CC6.6 | A.9.4.3 |
-| MFA for console access | IA-2(1) | CC6.1 | A.9.4.2 |
-| Root account restrictions | AC-2(5) | CC6.2 | A.9.2.3 |
+| Password complexity & rotation | IA-5(1) | CC6.6 | 5.17 (Authentication Information) |
+| MFA for console access | IA-2(1) | CC6.1 | 8.5 (Secure Auth) |
+| Root account restrictions | AC-2(5) | CC6.2 | 8.2 (Privileged Access) |
 
 ---
 
 ## Architecture
 
 ```
-EventBridge (schedule)
+CloudFormation (one-time deployment)
+   creates → IAM Role
+   creates → Lambda Function
+   creates → EventBridge Rule
+   creates → S3 Bucket configuration
+
+                    ↓ after deployment
+
+EventBridge (every 7 days)
         ↓
    Lambda Function
         ↓
@@ -67,14 +75,14 @@ Before you start, make sure you have:
 
 ## Deployment
 
-### Step 1 — Clone the repo
+### Step 1: Clone the repo
 
 ```bash
 git clone https://github.com/angie-in-the-cloud/aws-iam-compliance-snapshot.git
 cd aws-iam-compliance-snapshot
 ```
 
-### Step 2 — Package the Lambda source code
+### Step 2: Package the Lambda source code
 
 The Lambda function runs from a ZIP file. Package it like this:
 
@@ -84,7 +92,7 @@ zip -r ../lambda-source.zip .
 cd ..
 ```
 
-### Step 3 — Create your S3 bucket
+### Step 3: Create your S3 bucket
 
 This bucket stores your compliance reports. Bucket names must be globally unique — replace the name below with your own.
 
@@ -92,13 +100,13 @@ This bucket stores your compliance reports. Bucket names must be globally unique
 aws s3 mb s3://your-iam-snapshot-bucket --region us-east-1 --profile your-profile-name
 ```
 
-### Step 4 — Upload the Lambda ZIP to S3
+### Step 4: Upload the Lambda ZIP to S3
 
 ```bash
 aws s3 cp lambda-source.zip s3://your-iam-snapshot-bucket/source/lambda-source.zip --profile your-profile-name
 ```
 
-### Step 5 — Deploy the CloudFormation stack
+### Step 5: Deploy the CloudFormation stack
 
 ```bash
 aws cloudformation deploy \
@@ -116,9 +124,10 @@ You should see this in your terminal when it completes:
 Successfully created/updated stack - iam-compliance-snapshot
 ```
 
-### Step 6 — Update the Lambda with your source code
+### Step 6: Load your Python code into Lambda
 
-CloudFormation deploys a placeholder Lambda. Replace it with your actual code:
+When CloudFormation deployed your Lambda function in Step 5, it created a shell (the function exists but only has a placeholder inside it, not your actual scanner code).
+In Step 4 you uploaded your ZIP file to S3. Now you're telling Lambda to go grab it from there and load it in.
 
 ```bash
 aws lambda update-function-code \
@@ -129,7 +138,19 @@ aws lambda update-function-code \
   --profile your-profile-name
 ```
 
-### Step 7 — Run the snapshot manually
+What each flag means:
+
+| Flag | What it does |
+|---|---|
+| `--function-name` | The name of the Lambda function CloudFormation created |
+| `--s3-bucket` | The bucket where your ZIP file is sitting |
+| `--s3-key` | The path to the ZIP file inside the bucket |
+| `--region` | The AWS region where your Lambda lives |
+| `--profile` | Your AWS CLI profile |
+
+After this runs, your Lambda contains your real scanner code and is ready to use.
+
+### Step 7: Run the snapshot manually
 
 Test it before waiting for the schedule to trigger it:
 
@@ -154,7 +175,7 @@ Check `response.json` for the output summary. A successful run looks like:
 }
 ```
 
-### Step 8 — Check S3 for your reports
+### Step 8: Check S3 for your reports
 
 ```bash
 aws s3 ls s3://your-iam-snapshot-bucket/reports/ --profile your-profile-name
@@ -170,41 +191,27 @@ aws s3 cp s3://your-iam-snapshot-bucket/reports/iam_compliance_snapshot_<timesta
 
 ## Report output
 
-After the Lambda runs, two files appear in your S3 bucket.
+<details>
 
-**JSON report** — structured data for automation and audit trails
+<summary>After the Lambda runs, two files appear in your S3 bucket.</summary>
 
-```json
-{
-  "report_metadata": {
-    "tool": "aws-iam-compliance-snapshot",
-    "generated_at": "2026-04-14T00:00:00+00:00",
-    "frameworks": ["NIST 800-53", "SOC 2", "ISO 27001"]
-  },
-  "summary": {
-    "total_controls": 15,
-    "compliant": 6,
-    "non_compliant": 9,
-    "compliance_score": "40.0%",
-    "overall_status": "NON_COMPLIANT"
-  },
-  "findings": [...]
-}
-```
+**JSON report** - structured data for automation and audit trails
 
-**CSV report** — one row per control, ready for review or import into a GRC tool
+![json-report](./screenshots/json-report.png)
+     
+**CSV report** - one row per control, ready for review or import into a GRC tool
 
-| scanner | control | status | actual_value | required_value | nist_control | soc2_control | iso_control | remediation |
-|---|---|---|---|---|---|---|---|---|
-| PasswordPolicy | MinimumPasswordLength | NON_COMPLIANT | 10 | 14 | IA-5(1)(a) | CC6.6 | A.9.4.3 | Set minimum password length to at least 14 characters |
-| MFAEnforcement | MFA enabled for jane.doe | NON_COMPLIANT | No MFA device | MFA device required | IA-2(1) | CC6.1 | A.9.4.2 | Enable MFA for IAM user 'jane.doe' |
-| RootActivity | Root account activity (last 30 days) | NON_COMPLIANT | 50 root event(s) detected | 0 root events | AC-2(5) | CC6.2 | A.9.2.3 | Investigate root account usage |
+![csv-report](./screenshots/csv-report.png)
+
+</details>
 
 ---
 
 ## How the schedule works
 
-By default the snapshot runs every 7 days. EventBridge triggers the Lambda automatically — no manual intervention needed after deployment.
+The schedule is set in the CloudFormation template. To change it, update the `ScheduleExpression` parameter and redeploy the stack.
+
+By default the snapshot runs every 7 days. EventBridge triggers the Lambda automatically, no manual intervention needed after deployment.
 
 To change the schedule, update the `ScheduleExpression` parameter when deploying:
 
@@ -270,3 +277,5 @@ aws cloudformation delete-stack \
 - [AWS CloudTrail LookupEvents](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html)
 - [NIST 800-53 IA Control Family](https://csrc.nist.gov/projects/cprt/catalog#/cprt/framework/version/SP_800_53_5_1_0/home)
 - [AWS CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/)
+
+---
