@@ -1,4 +1,4 @@
-# AWS IAM Compliance Snapshot
+# AWS IAM Compliance Scanner
 
 Automated IAM compliance scanner that checks three security controls in one run and produces audit-ready evidence mapped to NIST 800-53, SOC 2, and ISO 27001.
 
