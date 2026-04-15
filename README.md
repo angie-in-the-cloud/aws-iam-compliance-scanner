@@ -78,8 +78,8 @@ Before you start, make sure you have:
 ### Step 1: Clone the repo
 
 ```bash
-git clone https://github.com/angie-in-the-cloud/aws-iam-compliance-snapshot.git
-cd aws-iam-compliance-snapshot
+git clone https://github.com/angie-in-the-cloud/aws-iam-compliance-scanner.git
+cd aws-iam-compliance-scanner
 ```
 
 ### Step 2: Package the Lambda source code
