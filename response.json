@@ -1,1 +1,0 @@
-{"statusCode": 200, "message": "IAM Compliance Snapshot complete", "bucket": "iam-compliance-snapshot-reports-2026124125001", "report_prefix": "reports/iam_compliance_snapshot_20260414_202902", "findings_count": 15, "compliant": 6, "non_compliant": 9, "timestamp": "20260414_202902"}
