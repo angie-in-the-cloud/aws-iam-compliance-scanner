@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  aws-iam-compliance-snapshot
+  aws-iam-compliance-scanner
   Deploys a scheduled Lambda function that scans IAM password policy,
   MFA enforcement, and root account activity. Outputs JSON and CSV
   compliance evidence to S3. Mapped to NIST 800-53, SOC 2, and ISO 27001.
@@ -9,11 +9,11 @@ Parameters:
   S3BucketName:
     Type: String
     Description: Name of the S3 bucket to store compliance reports (must be globally unique)
-    Default: iam-compliance-snapshot-reports
+    Default: iam-compliance-scanner-reports
 
   ScheduleExpression:
     Type: String
-    Description: How often to run the snapshot (cron or rate expression)
+    Description: How often to run the scan (cron or rate expression)
     Default: rate(7 days)
 
 Resources:
@@ -24,7 +24,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: iam-compliance-snapshot-role
+      RoleName: iam-compliance-scanner-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -33,7 +33,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: IamComplianceSnapshotPolicy
+        - PolicyName: IamCompliancescanPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -67,12 +67,12 @@ Resources:
                 Resource: !Sub arn:aws:s3:::${S3BucketName}/reports/*
 
   # -------------------------------------------------------
-  # Lambda Function — runs the compliance snapshot
+  # Lambda Function — runs the compliance scan
   # -------------------------------------------------------
-  ComplianceSnapshotFunction:
+  CompliancescanFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: iam-compliance-snapshot
+      FunctionName: iam-compliance-scanner
       Description: Scans IAM controls and writes compliance evidence to S3
       Runtime: python3.12
       Handler: lambda_function.handler
@@ -91,35 +91,35 @@ Resources:
   # -------------------------------------------------------
   # EventBridge Rule — triggers Lambda on a schedule
   # -------------------------------------------------------
-  SnapshotScheduleRule:
+  scanScheduleRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: iam-compliance-snapshot-schedule
-      Description: Triggers the IAM compliance snapshot on a recurring schedule
+      Name: iam-compliance-scanner-schedule
+      Description: Triggers the IAM Compliance Scan on a recurring schedule
       ScheduleExpression: !Ref ScheduleExpression
       State: ENABLED
       Targets:
-        - Id: ComplianceSnapshotTarget
-          Arn: !GetAtt ComplianceSnapshotFunction.Arn
+        - Id: CompliancescanTarget
+          Arn: !GetAtt CompliancescanFunction.Arn
 
   # Allow EventBridge to invoke the Lambda
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt ComplianceSnapshotFunction.Arn
+      FunctionName: !GetAtt CompliancescanFunction.Arn
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt SnapshotScheduleRule.Arn
+      SourceArn: !GetAtt scanScheduleRule.Arn
 
 Outputs:
   LambdaFunctionName:
-    Description: Name of the compliance snapshot Lambda function
-    Value: !Ref ComplianceSnapshotFunction
+    Description: Name of the compliance scan Lambda function
+    Value: !Ref CompliancescanFunction
 
   LambdaFunctionArn:
-    Description: ARN of the compliance snapshot Lambda function
-    Value: !GetAtt ComplianceSnapshotFunction.Arn
+    Description: ARN of the compliance scan Lambda function
+    Value: !GetAtt CompliancescanFunction.Arn
 
   ScheduleExpression:
-    Description: How often the snapshot runs
+    Description: How often the scan runs
     Value: !Ref ScheduleExpression

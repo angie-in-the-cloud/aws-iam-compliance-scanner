@@ -168,7 +168,7 @@ Check `response.json` for the output summary. A successful run looks like:
 ```json
 {
   "statusCode": 200,
-  "message": "IAM Compliance Snapshot complete",
+  "message": "IAM Compliance Scan complete",
   "findings_count": 15,
   "compliant": 6,
   "non_compliant": 9
@@ -184,7 +184,7 @@ aws s3 ls s3://your-iam-scanner-bucket/reports/ --profile your-profile-name
 Download the CSV to review findings:
 
 ```bash
-aws s3 cp s3://your-iam-scanner-bucket/reports/iam_compliance_snapshot_<timestamp>.csv . --profile your-profile-name
+aws s3 cp s3://your-iam-scanner-bucket/reports/iam_compliance_scan_<timestamp>.csv . --profile your-profile-name
 ```
 
 ---

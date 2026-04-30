@@ -40,7 +40,7 @@ def build_report(findings: list) -> dict:
 
     return {
         "report_metadata": {
-            "tool":           "aws-iam-compliance-snapshot",
+            "tool":           "aws-iam-compliance-scanner",
             "generated_at":   datetime.now(timezone.utc).isoformat(),
             "frameworks":     ["NIST 800-53", "SOC 2", "ISO 27001"],
             "scanners_run":   ["PasswordPolicy", "MFAEnforcement", "RootActivity"],

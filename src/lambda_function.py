@@ -1,5 +1,5 @@
 """
-aws-iam-compliance-snapshot
+aws-iam-compliance-scanner
 Lambda handler — orchestrates all 3 IAM compliance scanners,
 builds a unified report, and uploads it to S3.
 """
@@ -26,7 +26,7 @@ def handler(event, context):
     Entry point for the Lambda function.
     Runs all 3 scanners, builds a compliance report, and saves it to S3.
     """
-    logger.info("Starting IAM Compliance Snapshot")
+    logger.info("Starting IAM Compliance Scan")
 
     s3_bucket = os.environ.get("S3_BUCKET_NAME")
     aws_region = os.environ.get("AWS_REGION", "us-east-1")
@@ -44,18 +44,18 @@ def handler(event, context):
 
     # Build and upload report
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    report_key = f"reports/iam_compliance_snapshot_{timestamp}"
+    report_key = f"reports/iam_compliance_scan_{timestamp}"
 
     upload_to_s3(findings, s3_bucket, report_key, aws_region)
 
     compliant = sum(1 for f in findings if f["status"] == "COMPLIANT")
     non_compliant = sum(1 for f in findings if f["status"] == "NON_COMPLIANT")
 
-    logger.info(f"Snapshot complete — Compliant: {compliant} | Non-Compliant: {non_compliant}")
+    logger.info(f"scan complete — Compliant: {compliant} | Non-Compliant: {non_compliant}")
 
     return {
         "statusCode": 200,
-        "message": "IAM Compliance Snapshot complete",
+        "message": "IAM Compliance Scan complete",
         "bucket": s3_bucket,
         "report_prefix": report_key,
         "findings_count": len(findings),
