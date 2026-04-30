@@ -270,6 +270,20 @@ The Lambda role follows least privilege. It only has the permissions it needs:
 
 ---
 
+## Limitations
+
+This is intentionally a focused scanner, not a full IAM posture tool. Out of scope for this version:
+
+| Limitation | Why it matters |
+| --- | --- |
+| Single account only | Does not assume cross-account roles or scan an AWS Organization |
+| Console users only | Does not separately analyze federated/SSO users or service accounts |
+| No policy analysis | Does not evaluate IAM policies for over-permissive grants, wildcard actions, or unused permissions |
+| Last 30 days only | Root account check uses a 30-day CloudTrail lookback to stay within `LookupEvents` rate limits |
+| Snapshot in time | Each run is a point-in-time check, not continuous monitoring |
+
+---
+
 ## Cleanup
 
 To remove all resources created by this project:
