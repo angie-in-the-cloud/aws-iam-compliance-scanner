@@ -6,7 +6,7 @@ Automated IAM compliance scanner that checks three security controls in one run 
 
 ## What this project does
 
-Most compliance teams check IAM controls manually — logging into the console, reviewing settings one by one, and copying findings into a spreadsheet. This project automates that entire process.
+Most compliance teams check IAM controls manually by logging into the console, reviewing settings one by one, and copying findings into a spreadsheet. This project automates that entire process.
 
 A Lambda function runs on a schedule, scans three IAM controls, and uploads JSON and CSV compliance reports directly to S3. No manual steps. No console access required after deployment.
 
@@ -18,7 +18,7 @@ A Lambda function runs on a schedule, scans three IAM controls, and uploads JSON
 |---|---|---|
 | **Password Policy** | Evaluates 9 IAM password settings against hardened baselines | Weak password policies are one of the most common audit findings |
 | **MFA Enforcement** | Checks every console user for an active MFA device | Accounts without MFA are a leading cause of cloud breaches |
-| **Root Account Activity** | Searches CloudTrail for root login events in the last 30 days | Root usage bypasses all IAM controls — it should never appear in logs |
+| **Root Account Activity** | Searches CloudTrail for root login events in the last 30 days | Root usage bypasses all IAM controls, so it should never appear in logs |
 
 ---
 
@@ -78,8 +78,8 @@ Before you start, make sure you have:
 ### Step 1: Clone the repo
 
 ```bash
-git clone https://github.com/angie-in-the-cloud/aws-iam-compliance-snapshot.git
-cd aws-iam-compliance-snapshot
+git clone https://github.com/angie-in-the-cloud/aws-iam-compliance-scanner.git
+cd aws-iam-compliance-scanner
 ```
 
 ### Step 2: Package the Lambda source code
@@ -94,7 +94,7 @@ cd ..
 
 ### Step 3: Create your S3 bucket
 
-This bucket stores your compliance reports. Bucket names must be globally unique — replace the name below with your own.
+This bucket stores your compliance reports. Bucket names must be globally unique, so replace the name below with your own.
 
 ```bash
 aws s3 mb s3://your-iam-snapshot-bucket --region us-east-1 --profile your-profile-name
