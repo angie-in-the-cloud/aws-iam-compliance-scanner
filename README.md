@@ -73,6 +73,22 @@ Before you start, make sure you have:
 
 ---
 
+## Cost
+
+This project runs entirely within the AWS Free Tier.
+
+| Resource | Free Tier coverage | Estimated monthly cost |
+| --- | --- | --- |
+| Lambda invocations | 1M requests / 400,000 GB-seconds free | $0 |
+| EventBridge rules | First scheduled rule is free | $0 |
+| S3 storage | 5 GB standard storage free | $0 |
+| CloudTrail LookupEvents | Free for management events | $0 |
+| CloudWatch Logs | 5 GB ingestion free | $0 |
+
+At the default 7-day schedule, total monthly cost is **$0** for accounts within free tier limits. Even outside free tier, expected cost is under $0.10/month.
+
+---
+
 ## Deployment
 
 ### Step 1: Clone the repo
