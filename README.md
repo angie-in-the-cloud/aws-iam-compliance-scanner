@@ -97,23 +97,23 @@ cd ..
 This bucket stores your compliance reports. Bucket names must be globally unique, so replace the name below with your own.
 
 ```bash
-aws s3 mb s3://your-iam-snapshot-bucket --region us-east-1 --profile your-profile-name
+aws s3 mb s3://your-iam-scanner-bucket --region us-east-1 --profile your-profile-name
 ```
 
 ### Step 4: Upload the Lambda ZIP to S3
 
 ```bash
-aws s3 cp lambda-source.zip s3://your-iam-snapshot-bucket/source/lambda-source.zip --profile your-profile-name
+aws s3 cp lambda-source.zip s3://your-iam-scanner-bucket/source/lambda-source.zip --profile your-profile-name
 ```
 
 ### Step 5: Deploy the CloudFormation stack
 
 ```bash
 aws cloudformation deploy \
-  --stack-name iam-compliance-snapshot \
+  --stack-name iam-compliance-scanner \
   --template-file templates/cloudformation.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides S3BucketName=your-iam-snapshot-bucket \
+  --parameter-overrides S3BucketName=your-iam-scanner-bucket \
   --region us-east-1 \
   --profile your-profile-name
 ```
@@ -121,7 +121,7 @@ aws cloudformation deploy \
 You should see this in your terminal when it completes:
 
 ```
-Successfully created/updated stack - iam-compliance-snapshot
+Successfully created/updated stack - iam-compliance-scanner
 ```
 
 ### Step 6: Load your Python code into Lambda
@@ -131,8 +131,8 @@ In Step 4 you uploaded your ZIP file to S3. Now you're telling Lambda to go grab
 
 ```bash
 aws lambda update-function-code \
-  --function-name iam-compliance-snapshot \
-  --s3-bucket your-iam-snapshot-bucket \
+  --function-name iam-compliance-scanner \
+  --s3-bucket your-iam-scanner-bucket \
   --s3-key source/lambda-source.zip \
   --region us-east-1 \
   --profile your-profile-name
@@ -150,13 +150,13 @@ What each flag means:
 
 After this runs, your Lambda contains your real scanner code and is ready to use.
 
-### Step 7: Run the snapshot manually
+### Step 7: Run the scan manually
 
 Test it before waiting for the schedule to trigger it:
 
 ```bash
 aws lambda invoke \
-  --function-name iam-compliance-snapshot \
+  --function-name iam-compliance-scanner \
   --region us-east-1 \
   --profile your-profile-name \
   --cli-read-timeout 300 \
@@ -178,13 +178,13 @@ Check `response.json` for the output summary. A successful run looks like:
 ### Step 8: Check S3 for your reports
 
 ```bash
-aws s3 ls s3://your-iam-snapshot-bucket/reports/ --profile your-profile-name
+aws s3 ls s3://your-iam-scanner-bucket/reports/ --profile your-profile-name
 ```
 
 Download the CSV to review findings:
 
 ```bash
-aws s3 cp s3://your-iam-snapshot-bucket/reports/iam_compliance_snapshot_<timestamp>.csv . --profile your-profile-name
+aws s3 cp s3://your-iam-scanner-bucket/reports/iam_compliance_snapshot_<timestamp>.csv . --profile your-profile-name
 ```
 
 ---
@@ -211,7 +211,7 @@ aws s3 cp s3://your-iam-snapshot-bucket/reports/iam_compliance_snapshot_<timesta
 
 The schedule is set in the CloudFormation template. To change it, update the `ScheduleExpression` parameter and redeploy the stack.
 
-By default the snapshot runs every 7 days. EventBridge triggers the Lambda automatically, no manual intervention needed after deployment.
+By default the scan runs every 7 days. EventBridge triggers the Lambda automatically, no manual intervention needed after deployment.
 
 To change the schedule, update the `ScheduleExpression` parameter when deploying:
 
@@ -247,11 +247,11 @@ To remove all resources created by this project:
 
 ```bash
 # Empty the S3 bucket first (required before stack deletion)
-aws s3 rm s3://your-iam-snapshot-bucket --recursive --profile your-profile-name
+aws s3 rm s3://your-iam-scanner-bucket --recursive --profile your-profile-name
 
 # Delete the CloudFormation stack
 aws cloudformation delete-stack \
-  --stack-name iam-compliance-snapshot \
+  --stack-name iam-compliance-scanner \
   --region us-east-1 \
   --profile your-profile-name
 ```
