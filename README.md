@@ -12,6 +12,19 @@ A Lambda function runs on a schedule, scans three IAM controls, and uploads JSON
 
 ---
 
+## Skills demonstrated
+
+| Area | Description |
+|---|---|
+| GRC Automation | Automated three IAM compliance controls with structured evidence output |
+| Framework Alignment | Mapped findings to NIST 800-53, SOC 2, and ISO 27001 |
+| Serverless Architecture | Deployed scheduled Lambda with EventBridge trigger |
+| Infrastructure as Code | Defined all AWS resources in a CloudFormation template |
+| Least Privilege IAM | Lambda role scoped to only required read permissions |
+| Evidence Generation | Produced JSON and CSV audit-ready reports automatically |
+
+---
+
 ## The three controls it checks
 
 | Scanner | What it checks | Why it matters |
@@ -271,19 +284,6 @@ aws cloudformation delete-stack \
   --region us-east-1 \
   --profile your-profile-name
 ```
-
----
-
-## Skills demonstrated
-
-| Area | Description |
-|---|---|
-| GRC Automation | Automated three IAM compliance controls with structured evidence output |
-| Framework Alignment | Mapped findings to NIST 800-53, SOC 2, and ISO 27001 |
-| Serverless Architecture | Deployed scheduled Lambda with EventBridge trigger |
-| Infrastructure as Code | Defined all AWS resources in a CloudFormation template |
-| Least Privilege IAM | Lambda role scoped to only required read permissions |
-| Evidence Generation | Produced JSON and CSV audit-ready reports automatically |
 
 ---
 
