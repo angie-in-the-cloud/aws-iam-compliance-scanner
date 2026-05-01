@@ -220,9 +220,7 @@ aws s3 cp s3://your-iam-scanner-bucket/reports/iam_compliance_scan_<timestamp>.c
 
 ## Report output
 
-<details>
-
-<summary>After the Lambda runs, two files appear in your S3 bucket.</summary>
+After the Lambda runs, two files appear in your S3 bucket.
 
 **JSON report** - structured data for automation and audit trails
 
@@ -231,8 +229,6 @@ aws s3 cp s3://your-iam-scanner-bucket/reports/iam_compliance_scan_<timestamp>.c
 **CSV report** - one row per control, ready for review or import into a GRC tool
 
 ![csv-report](./screenshots/csv-report.png)
-
-</details>
 
 ---
 
