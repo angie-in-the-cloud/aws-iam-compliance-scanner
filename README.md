@@ -41,9 +41,9 @@ Every finding is mapped to the relevant control in each framework.
 
 | Control Area | NIST 800-53 | SOC 2 | ISO 27001 |
 |---|---|---|---|
-| Password complexity & rotation | IA-5(1) | CC6.6 | 5.17 (Authentication Information) |
-| MFA for console access | IA-2(1) | CC6.1 | 8.5 (Secure Auth) |
-| Root account restrictions | AC-2(5) | CC6.2 | 8.2 (Privileged Access) |
+| Password complexity & rotation | IA-5(1) | CC6.1 | 5.17 |
+| MFA for console access | IA-2(1) | CC6.1 | 8.5 |
+| Root account restrictions | AC-6 | CC6.3 | 8.2 |
 
 ---
 
