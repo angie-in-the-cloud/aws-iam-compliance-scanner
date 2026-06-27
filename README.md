@@ -301,7 +301,6 @@ aws cloudformation delete-stack \
 
 - [AWS IAM Password Policy documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html)
 - [AWS CloudTrail LookupEvents](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html)
-- [NIST 800-53 IA Control Family](https://csrc.nist.gov/projects/cprt/catalog#/cprt/framework/version/SP_800_53_5_1_0/home)
-- [AWS CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/)
+- [NIST 800-53 IA Control Family](https://csrc.nist.gov/projects/cprt/catalog#/cprt/framework/version/SP_800_53_5_2_0/home)
 
 ---
